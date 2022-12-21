@@ -3,9 +3,11 @@ package Utility;
 import Accounts.AccountFactory;
 import Accounts.AccountType;
 import Database.Database;
+import Users.Admin;
 import Users.Customer;
 
 import java.util.InputMismatchException;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -171,6 +173,56 @@ public class Utility {
             database.updateCustomerTextFile();
         } else {
             System.out.println("felaktigt siffra");
+        }
+    }
+
+    public void deleteCustomer(Admin admin) {
+        Scanner scan = new Scanner(System.in);
+        boolean found = false;
+        System.out.println("Skriv in personnummer på personen du vill ta bort ur systemet (sexsiffrigt nummer)");
+        String answer = scan.nextLine();
+        for (int i = 0; i < database.getCustomers().size(); i++) {
+            if(Objects.equals(database.getCustomers().get(i).getNumber(), answer)){
+                history.writeToFile("Removed user " + database.getCustomers().get(i).getName() + " from the system" , admin);
+                System.out.println("Kunden " + database.getCustomers().get(i).getName() + "borttagen ur system");
+                database.getCustomers().remove(i);
+                database.updateCustomerTextFile();
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            System.out.println("Personen med det personnumret finns inte i systemet");
+        }
+
+
+    }
+
+    public void deleteAccount(Admin admin) {
+        Scanner scan = new Scanner(System.in);
+        boolean found = false;
+        System.out.println("Från vilken kund (personnummer) vill du ta bort ett konto från? (sexsiffrigt nummer)");
+        String customer = scan.nextLine();
+        for (int i = 0; i < database.getCustomers().size(); i++) {
+          if(Objects.equals(database.getCustomers().get(i).getNumber(), customer)){
+              found = true;
+              for (int j = 0; j < database.getCustomers().get(i).getAccounts().size(); j++) {
+                  System.out.println(j + 1 + ". Konto: " + database.getCustomers().get(i).getAccounts().get(j).getId() + " Balance: " +database.getCustomers().get(i).getAccounts().get(j).getBalance() + " kr");
+              }
+              int konto = inputInt("Svara med siffran som stämmer överens med Kontot") - 1;
+              if(konto < database.getCustomers().get(i).getAccounts().size()) {
+                  history.writeToFile("Remove account " + database.getCustomers().get(i).getAccounts().get(konto).getId(), admin);
+                  database.getCustomers().get(i).getAccounts().remove(konto);
+                  System.out.println("Kontot är borttaget");
+                  database.updateCustomerTextFile();
+                  break;
+              } else {
+                  System.out.println("Felaktigt nummer");
+              }
+          }
+        }
+        if(!found){
+            System.out.println("Personen med det personnumret finns inte i systemet");
         }
     }
 }

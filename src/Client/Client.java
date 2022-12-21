@@ -17,14 +17,18 @@ public class Client {
     Utility utility = new Utility();
     FAQ faq = new FAQ();
 
-    Database database = Database.getDatabase();
+    static Database database = Database.getDatabase();
+
+    static volatile boolean wait = false;
+    static int counter = 1;
 
     void Program() {
+        boolean program = true;
 
-        System.out.println("\nVälkommen till Bank Systemet");
+        System.out.println("\nVälkommen till Bank Systemet Klient: " + counter);
         System.out.println("Dagens Datum: " + today + "\n");
         System.out.println("Kontaktinformation:\nEmail: bank@bank.com\nAdress: Bankgatan 1, Bankstaden.\n");
-        while (true) {
+        while (program) {
             int answer = utility.inputInt("""
                     Vad vill du göra?
                     1. Logga in
@@ -75,7 +79,10 @@ public class Client {
                     faq.readingFAQ();
                     utility.sleep(1000);
                 }
-                case (4) -> System.exit(0);
+                case (4) -> {
+                    wait = false;
+                    program = false;
+                }
                 default -> System.out.println("Felaktigt nummer");
             }
         }
@@ -102,10 +109,12 @@ public class Client {
         boolean startLoop = true;
         do {
             int answer = utility.inputInt("Välkommen " + admin.getName() +
-                    "\n1. Uppdatera FAQ\n2. Logga ut");
+                    "\n1. Uppdatera FAQ\n2. Ta bort Kund \n3. Ta bort konto\n4. Logga ut");
             switch (answer) {
                 case (1) -> faq.writingFAQ();
-                case (2) -> startLoop = false;
+                case (2) -> utility.deleteCustomer(admin);
+                case (3) -> utility.deleteAccount(admin);
+                case (4) -> startLoop = false;
                 default -> System.out.println("Felaktigt nummer");
             }
         }while(startLoop);
@@ -129,7 +138,23 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        Client client = new Client();
-        client.Program();
+        Thread threadOne = new Thread(new ThreadClient());
+        Thread threadTwo = new Thread(new ThreadClient());
+        threadOne.start();
+        wait = true;
+        while (wait) {
+            Thread.onSpinWait();
+        }
+        threadTwo.start();
+    }
+
+    static class ThreadClient implements Runnable {
+        @Override
+        public void run() {
+            Client client = new Client();
+            System.out.println(database);
+            client.Program();
+            counter++;
+        }
     }
 }

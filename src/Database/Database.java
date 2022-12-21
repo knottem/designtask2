@@ -21,7 +21,7 @@ public class Database {
         addAdminsToDatabase();
     }
     //Databasen skapas om den inte redan finns, annars returneras den som redan finns
-    public static Database getDatabase() {
+    synchronized public static Database getDatabase() {
         if (instance == null) {
             instance = new Database();
         }
